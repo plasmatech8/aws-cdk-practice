@@ -5,22 +5,20 @@ Following:
 
 Contents:
 - [CDK Workshop](#cdk-workshop)
-  - [01. Prerequisites](#01-prerequisites)
-    - [Account Setup](#account-setup)
-    - [NodeJS Setup](#nodejs-setup)
-    - [Python Setup](#python-setup)
-  - [02. TypeScript Workshop](#02-typescript-workshop)
-    - [Initialize Project](#initialize-project)
-    - [Project Structure](#project-structure)
-      - [Entry Point](#entry-point)
-      - [Main Stack Definition](#main-stack-definition)
-      - [CDK Config](#cdk-config)
-    - [CDK Synth](#cdk-synth)
-    - [CDK Deploy](#cdk-deploy)
+  - [1. Prerequisites](#1-prerequisites)
+    - [1.1 Account Setup](#11-account-setup)
+    - [1.2 NodeJS Setup](#12-nodejs-setup)
+    - [1.3 Python Setup](#13-python-setup)
+  - [2. TypeScript Workshop](#2-typescript-workshop)
+    - [2.1 New Project](#21-new-project)
+      - [2.1.1 Initialize Project](#211-initialize-project)
+      - [2.1.2 Project Structure](#212-project-structure)
+      - [2.1.3 CDK Synth](#213-cdk-synth)
+      - [2.1.3  CDK Deploy](#213--cdk-deploy)
 
-## 01. Prerequisites
+## 1. Prerequisites
 
-### Account Setup
+### 1.1 Account Setup
 
 You need the AWS CLI to be installed.
 
@@ -35,7 +33,7 @@ Now configure credentials.
 
 Input access key ID and and secret access key. Leave region and output format blank.
 
-### NodeJS Setup
+### 1.2 NodeJS Setup
 
 You need NodeJS to be installed.
 
@@ -43,13 +41,15 @@ Install the AWS NPM module: `npm install -g aws-cdk`
 
 Now you will have the cdk command available: `cdk --version`
 
-### Python Setup
+### 1.3 Python Setup
 
 You need Python to be installed.
 
-## 02. TypeScript Workshop
+## 2. TypeScript Workshop
 
-### Initialize Project
+### 2.1 New Project
+
+#### 2.1.1 Initialize Project
 
 Use `cdk init <template>` to create a new project.
 
@@ -77,28 +77,28 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
 * `cdk synth`       emits the synthesized CloudFormation template
 ```
 
-### Project Structure
+#### 2.1.2 Project Structure
 
-#### Entry Point
+**Entry Point**
 
 `bin/cdk-workshop.ts` = entrypoint for CDK application which loads the stack
 
 Creating a stack is as simple as instantiating a Stack
 and passing in the App object.
 
-#### Main Stack Definition
+**Main Stack Definition**
 
 `lib/cdk-workshop-stack.ts` = application stack is defined
 
 The application with all of the SDS, SNS, EC2, etc instances
 are defined, created, and tied together.
 
-#### CDK Config
+**CDK Config**
 
 `cdk.json` = tells toolkit how to run the app (in this case `npx ts-node bin/cdk-workshop.ts`)
 
 
-### CDK Synth
+#### 2.1.3 CDK Synth
 
 A CDK app is a definition of your infrastructure.
 
@@ -107,7 +107,7 @@ defined in your application.
 
 Use command: `cdk synth`, to generate a CloudFormation template.
 
-### CDK Deploy
+#### 2.1.3  CDK Deploy
 
 Before you deploy, you need to create the CDK toolkit stack using: `cdk bootstrap`
 
