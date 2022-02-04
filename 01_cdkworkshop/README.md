@@ -15,6 +15,7 @@ Contents:
       - [2.1.2 Project Structure](#212-project-structure)
       - [2.1.3 CDK Synth](#213-cdk-synth)
       - [2.1.3  CDK Deploy](#213--cdk-deploy)
+  - [3. Hello CDK!](#3-hello-cdk)
 
 ## 1. Prerequisites
 
@@ -116,3 +117,9 @@ This contains resources required to deploy CDK apps.
 Then you can deploy using: `cdk deploy`
 
 And you can destroy using: `cdk destroy`
+
+## 3. Hello CDK!
+
+Let's build a stack which consists of a Lambda function with an API Gateway.
+
+We will modify `cdk-workshop`.
