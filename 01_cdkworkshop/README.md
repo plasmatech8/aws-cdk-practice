@@ -15,6 +15,8 @@ Contents:
       - [Entry Point](#entry-point)
       - [Main Stack Definition](#main-stack-definition)
       - [CDK Config](#cdk-config)
+    - [CDK Synth](#cdk-synth)
+    - [CDK Deploy](#cdk-deploy)
 
 ## 01. Prerequisites
 
@@ -94,3 +96,23 @@ are defined, created, and tied together.
 #### CDK Config
 
 `cdk.json` = tells toolkit how to run the app (in this case `npx ts-node bin/cdk-workshop.ts`)
+
+
+### CDK Synth
+
+A CDK app is a definition of your infrastructure.
+
+When executed, they produce a CloudFormation template for each stack
+defined in your application.
+
+Use command: `cdk synth`, to generate a CloudFormation template.
+
+### CDK Deploy
+
+Before you deploy, you need to create the CDK toolkit stack using: `cdk bootstrap`
+
+This contains resources required to deploy CDK apps.
+
+Then you can deploy using: `cdk deploy`
+
+And you can destroy using: `cdk destroy`
