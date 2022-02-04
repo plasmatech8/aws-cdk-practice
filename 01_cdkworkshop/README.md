@@ -14,8 +14,10 @@ Contents:
       - [2.1.1 Initialize Project](#211-initialize-project)
       - [2.1.2 Project Structure](#212-project-structure)
       - [2.1.3 CDK Synth](#213-cdk-synth)
-      - [2.1.3  CDK Deploy](#213--cdk-deploy)
+      - [2.1.3 CDK Deploy](#213-cdk-deploy)
   - [3. Hello CDK!](#3-hello-cdk)
+    - [3.1 Create Lambda function](#31-create-lambda-function)
+    - [3.2 About constructs and constructors](#32-about-constructs-and-constructors)
 
 ## 1. Prerequisites
 
@@ -94,6 +96,22 @@ and passing in the App object.
 The application with all of the SDS, SNS, EC2, etc instances
 are defined, created, and tied together.
 
+```ts
+export class CdkWorkshopStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
+    super(scope, id, props);
+
+    const queue = new sqs.Queue(this, 'CdkWorkshopQueue', {
+      visibilityTimeout: Duration.seconds(300)
+    });
+
+    const topic = new sns.Topic(this, 'CdkWorkshopTopic');
+
+    topic.addSubscription(new subs.SqsSubscription(queue));
+  }
+}
+```
+
 **CDK Config**
 
 `cdk.json` = tells toolkit how to run the app (in this case `npx ts-node bin/cdk-workshop.ts`)
@@ -108,7 +126,7 @@ defined in your application.
 
 Use command: `cdk synth`, to generate a CloudFormation template.
 
-#### 2.1.3  CDK Deploy
+#### 2.1.3 CDK Deploy
 
 Before you deploy, you need to create the CDK toolkit stack using: `cdk bootstrap`
 
@@ -123,3 +141,39 @@ And you can destroy using: `cdk destroy`
 Let's build a stack which consists of a Lambda function with an API Gateway.
 
 We will modify `cdk-workshop`.
+
+### 3.1 Create Lambda function
+
+We will create Lambda function at: `lambda/hello.js`
+```js
+exports.handler = async function(event) {
+  console.log("request:", JSON.stringify(event, undefined, 2));
+  return {
+    statusCode: 200,
+    headers: { "Content-Type": "text/plain" },
+    body: `Hello, CDK! You've hit ${event.path}\n`
+  };
+};
+```
+
+We will add the Lambda function to our stack.
+```ts
+import * as cdk from 'aws-cdk-lib';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+// ...
+const hello = new lambda.Function(this, 'HelloHandler', {
+    runtime: lambda.Runtime.NODEJS_14_X,
+    code: lambda.Code.fromAsset('lambda'),
+    handler: 'hello.handler'
+});
+```
+
+We can now test by deploying the function and finding the Lambda function in the AWS Console.
+
+### 3.2 About constructs and constructors
+
+`CdkWorkshopStack` and `lambda.Function` have function signatures of `(scope, id, props)`
+(scope/parent, id/name, properties) because these classes are **constructs**
+representing "cloud components".
+
+A construct is always created in the scope of another.
