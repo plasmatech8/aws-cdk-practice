@@ -18,6 +18,7 @@ Contents:
   - [3. Hello CDK!](#3-hello-cdk)
     - [3.1 Create Lambda function](#31-create-lambda-function)
     - [3.2 About constructs and constructors](#32-about-constructs-and-constructors)
+    - [3.3 CDK Deploy & Watch](#33-cdk-deploy--watch)
 
 ## 1. Prerequisites
 
@@ -177,3 +178,19 @@ We can now test by deploying the function and finding the Lambda function in the
 representing "cloud components".
 
 A construct is always created in the scope of another.
+
+### 3.3 CDK Deploy & Watch
+
+`cdk deploy --hotswap` is for hotswap deployment:
+* Assesses whether a hotswap deployment can be made instead of a new CloudFormation deployment
+* Otherwise falls back to CloudFormation deployment
+* Useful for when we are not changing our infrastructure, but are just making some changes to Lambda function code
+* (USE ONLY FOR DEV because it introduces CloudFormation drift)
+
+`cdk watch` is the same as deploy with hotswap, except it runs whenever you save a file.
+* You will need to remove `**/*.js` from the exclude block in `cdk.json`
+
+Command                     | Deployment Time   | Total Time
+============================|===================|============
+`cdk deploy`                | 60.8s             | 67.77s
+`cdk deploy --hotswap`      | 3.99s             | 11.48s
