@@ -191,6 +191,6 @@ A construct is always created in the scope of another.
 * You will need to remove `**/*.js` from the exclude block in `cdk.json`
 
 Command                     | Deployment Time   | Total Time
-============================|===================|============
+----------------------------|-------------------|-------------
 `cdk deploy`                | 60.8s             | 67.77s
 `cdk deploy --hotswap`      | 3.99s             | 11.48s
