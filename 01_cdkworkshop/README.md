@@ -15,10 +15,11 @@ Contents:
       - [2.1.2 Project Structure](#212-project-structure)
       - [2.1.3 CDK Synth](#213-cdk-synth)
       - [2.1.3 CDK Deploy](#213-cdk-deploy)
-  - [3. Hello CDK!](#3-hello-cdk)
-    - [3.1 Create Lambda function](#31-create-lambda-function)
-    - [3.2 About constructs and constructors](#32-about-constructs-and-constructors)
-    - [3.3 CDK Deploy & Watch](#33-cdk-deploy--watch)
+    - [2.2 Hello CDK!](#22-hello-cdk)
+      - [2.2.1 Create Lambda function](#221-create-lambda-function)
+      - [2.2.2 About constructs and constructors](#222-about-constructs-and-constructors)
+      - [2.2.3 CDK Deploy & Watch](#223-cdk-deploy--watch)
+      - [2.2.4 API Gateway](#224-api-gateway)
 
 ## 1. Prerequisites
 
@@ -137,13 +138,13 @@ Then you can deploy using: `cdk deploy`
 
 And you can destroy using: `cdk destroy`
 
-## 3. Hello CDK!
+### 2.2 Hello CDK!
 
 Let's build a stack which consists of a Lambda function with an API Gateway.
 
 We will modify `cdk-workshop`.
 
-### 3.1 Create Lambda function
+#### 2.2.1 Create Lambda function
 
 We will create Lambda function at: `lambda/hello.js`
 ```js
@@ -171,7 +172,7 @@ const hello = new lambda.Function(this, 'HelloHandler', {
 
 We can now test by deploying the function and finding the Lambda function in the AWS Console.
 
-### 3.2 About constructs and constructors
+#### 2.2.2 About constructs and constructors
 
 `CdkWorkshopStack` and `lambda.Function` have function signatures of `(scope, id, props)`
 (scope/parent, id/name, properties) because these classes are **constructs**
@@ -179,7 +180,7 @@ representing "cloud components".
 
 A construct is always created in the scope of another.
 
-### 3.3 CDK Deploy & Watch
+#### 2.2.3 CDK Deploy & Watch
 
 `cdk deploy --hotswap` is for hotswap deployment:
 * Assesses whether a hotswap deployment can be made instead of a new CloudFormation deployment
@@ -194,3 +195,17 @@ Command                     | Deployment Time   | Total Time
 ----------------------------|-------------------|-------------
 `cdk deploy`                | 60.8s             | 67.77s
 `cdk deploy --hotswap`      | 3.99s             | 11.48s
+
+#### 2.2.4 API Gateway
+
+We can create an API gateway by creating an API gateway object in our stack.
+```ts
+import * as apigw from 'aws-cdk-lib/aws-apigateway';
+
+// ...
+
+// API Gateway
+new apigw.LambdaRestApi(this, 'Endpoint', {
+    handler: hello
+});
+```
