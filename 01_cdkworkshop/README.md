@@ -20,6 +20,11 @@ Contents:
       - [2.2.2 About constructs and constructors](#222-about-constructs-and-constructors)
       - [2.2.3 CDK Deploy & Watch](#223-cdk-deploy--watch)
       - [2.2.4 API Gateway](#224-api-gateway)
+  - [2.3 Writing Constructs](#23-writing-constructs)
+    - [2.3.1 Define HitCounter API (Stack)](#231-define-hitcounter-api-stack)
+    - [2.3.2 HitCounter handler (Lambda function)](#232-hitcounter-handler-lambda-function)
+    - [2.3.3 Add hit counter to the stack](#233-add-hit-counter-to-the-stack)
+    - [2.3.4 Deploy, Test, Debug](#234-deploy-test-debug)
 
 ## 1. Prerequisites
 
@@ -172,6 +177,8 @@ const hello = new lambda.Function(this, 'HelloHandler', {
 
 We can now test by deploying the function and finding the Lambda function in the AWS Console.
 
+See [Lambda Function Props](https://docs.aws.amazon.com/cdk/api/v1/docs/@aws-cdk_aws-lambda.FunctionProps.html)
+
 #### 2.2.2 About constructs and constructors
 
 `CdkWorkshopStack` and `lambda.Function` have function signatures of `(scope, id, props)`
@@ -209,3 +216,135 @@ new apigw.LambdaRestApi(this, 'Endpoint', {
     handler: hello
 });
 ```
+
+See [LambdaRestApi Props for API Gateway](https://docs.aws.amazon.com/cdk/api/v1/docs/@aws-cdk_aws-apigateway.LambdaRestApiProps.html)
+
+## 2.3 Writing Constructs
+
+We will create a `HitCounter` Lambda function with a database.
+
+It will update a counter in DynamoDB and return the response from calling a different Lambda function.
+
+### 2.3.1 Define HitCounter API (Stack)
+
+We will define the HitCounter stack.
+```ts
+import * as cdk from 'aws-cdk-lib';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import { Construct } from 'constructs';
+
+export interface HitCounterProps {
+    /** the function for which we want to count url hits **/
+    downstream: lambda.IFunction;
+}
+
+export class HitCounter extends Construct {
+    /** allows accessing the counter function */
+    public readonly handler: lambda.Function;
+
+    constructor(scope: Construct, id: string, props: HitCounterProps) {
+        super(scope, id);
+
+        const table = new dynamodb.Table(this, 'Hits', {
+            partitionKey: { name: 'path', type: dynamodb.AttributeType.STRING }
+        });
+
+        this.handler = new lambda.Function(this, 'HitCounterHandler', {
+            runtime: lambda.Runtime.NODEJS_14_X,
+            handler: 'hitcounter.handler',
+            code: lambda.Code.fromAsset('lambda'),
+            environment: {
+                DOWNSTREAM_FUNCTION_NAME: props.downstream.functionName,
+                HITS_TABLE_NAME: table.tableName
+            }
+        });
+    }
+}
+```
+
+* DynamoDB is created with `path` as partition key
+* Lambda function bound to the code in `lambda/hitcounter.js`
+* Input environment variables
+* `props.downstream.funcitonName` (name of the function about to be deployed) and `table.tableName` (the name of the table about to be deployed) are values that are resolved when the stack is deployed
+
+### 2.3.2 HitCounter handler (Lambda function)
+
+It will update DynamoDB with a counter and just return the response from calling a different Lambda function.
+```ts
+const { DynamoDB, Lambda } = require('aws-sdk');
+
+exports.handler = async function(event) {
+  console.log("request:", JSON.stringify(event, undefined, 2));
+
+  // create AWS SDK clients
+  const dynamo = new DynamoDB();
+  const lambda = new Lambda();
+
+  // update dynamo entry for "path" with hits++
+  await dynamo.updateItem({
+    TableName: process.env.HITS_TABLE_NAME,
+    Key: { path: { S: event.path } },
+    UpdateExpression: 'ADD hits :incr',
+    ExpressionAttributeValues: { ':incr': { N: '1' } }
+  }).promise();
+
+  // call downstream function and capture response
+  const resp = await lambda.invoke({
+    FunctionName: process.env.DOWNSTREAM_FUNCTION_NAME,
+    Payload: JSON.stringify(event)
+  }).promise();
+
+  console.log('downstream response:', JSON.stringify(resp, undefined, 2));
+
+  // return response back to upstream caller
+  return JSON.parse(resp.Payload);
+};
+```
+
+### 2.3.3 Add hit counter to the stack
+
+We will add HitCounter to `cdk-workshop-stack.ts`.
+
+```ts
+import { HitCounter } from './hitcounter';
+// ...
+const helloWithCounter = new HitCounter(this, 'HelloHitCounter', {
+    downstream: hello
+});
+// ...
+new apigw.LambdaRestApi(this, 'Endpoint', {
+    handler: helloWithCounter.handler
+});
+```
+
+### 2.3.4 Deploy, Test, Debug
+
+After `cdk deploy` it will show URLs of the endpoint as the outputs.
+
+Test lambda function:
+```bash
+curl -i https://<???>.execute-api.ap-southeast-2.amazonaws.com/prod/
+```
+
+We get `{"message": "Internal server error"}`.
+
+Go to AWS Console > Find the Lambda Function CdkWorkshopStack-HelloHitCounter. Find CloudWatch logs.
+
+We need to grant permission for the Lambda function to write to DynamoDB. Add to `hitcounter.js`:
+```ts
+//...
+// grant the lambda role read/write permissions to our table
+table.grantReadWriteData(this.handler);
+```
+
+Now it should be able to write to DynamoDB.
+
+We need to grant permission for the Lambda function to call the other Lambda function. Add to `hitcounter.js`:
+```ts
+//...
+// grant the lambda role invoke permissions to the downstream function
+props.downstream.grantInvoke(this.handler);
+```
+
+Now redeploy and retry. You may need to wait a few minutes for the roles to update.
