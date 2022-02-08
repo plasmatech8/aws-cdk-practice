@@ -20,11 +20,11 @@ Contents:
       - [2.2.2 About constructs and constructors](#222-about-constructs-and-constructors)
       - [2.2.3 CDK Deploy & Watch](#223-cdk-deploy--watch)
       - [2.2.4 API Gateway](#224-api-gateway)
-  - [2.3 Writing Constructs](#23-writing-constructs)
-    - [2.3.1 Define HitCounter API (Stack)](#231-define-hitcounter-api-stack)
-    - [2.3.2 HitCounter handler (Lambda function)](#232-hitcounter-handler-lambda-function)
-    - [2.3.3 Add hit counter to the stack](#233-add-hit-counter-to-the-stack)
-    - [2.3.4 Deploy, Test, Debug](#234-deploy-test-debug)
+    - [2.3 Writing Constructs](#23-writing-constructs)
+      - [2.3.1 Define HitCounter API (Stack)](#231-define-hitcounter-api-stack)
+      - [2.3.2 HitCounter handler (Lambda function)](#232-hitcounter-handler-lambda-function)
+      - [2.3.3 Add hit counter to the stack](#233-add-hit-counter-to-the-stack)
+      - [2.3.4 Deploy, Test, Debug](#234-deploy-test-debug)
 
 ## 1. Prerequisites
 
@@ -219,13 +219,13 @@ new apigw.LambdaRestApi(this, 'Endpoint', {
 
 See [LambdaRestApi Props for API Gateway](https://docs.aws.amazon.com/cdk/api/v1/docs/@aws-cdk_aws-apigateway.LambdaRestApiProps.html)
 
-## 2.3 Writing Constructs
+### 2.3 Writing Constructs
 
 We will create a `HitCounter` Lambda function with a database.
 
 It will update a counter in DynamoDB and return the response from calling a different Lambda function.
 
-### 2.3.1 Define HitCounter API (Stack)
+#### 2.3.1 Define HitCounter API (Stack)
 
 We will define the HitCounter stack.
 ```ts
@@ -268,7 +268,7 @@ export class HitCounter extends Construct {
 * Input environment variables
 * `props.downstream.funcitonName` (name of the function about to be deployed) and `table.tableName` (the name of the table about to be deployed) are values that are resolved when the stack is deployed
 
-### 2.3.2 HitCounter handler (Lambda function)
+#### 2.3.2 HitCounter handler (Lambda function)
 
 It will update DynamoDB with a counter and just return the response from calling a different Lambda function.
 ```ts
@@ -302,7 +302,7 @@ exports.handler = async function(event) {
 };
 ```
 
-### 2.3.3 Add hit counter to the stack
+#### 2.3.3 Add hit counter to the stack
 
 We will add HitCounter to `cdk-workshop-stack.ts`.
 
@@ -318,7 +318,7 @@ new apigw.LambdaRestApi(this, 'Endpoint', {
 });
 ```
 
-### 2.3.4 Deploy, Test, Debug
+#### 2.3.4 Deploy, Test, Debug
 
 After `cdk deploy` it will show URLs of the endpoint as the outputs.
 
