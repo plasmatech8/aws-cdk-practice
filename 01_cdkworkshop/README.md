@@ -25,6 +25,8 @@ Contents:
       - [2.3.2 HitCounter handler (Lambda function)](#232-hitcounter-handler-lambda-function)
       - [2.3.3 Add hit counter to the stack](#233-add-hit-counter-to-the-stack)
       - [2.3.4 Deploy, Test, Debug](#234-deploy-test-debug)
+    - [2.4 Using Construct Libraries](#24-using-construct-libraries)
+      - [2.4.1](#241)
 
 ## 1. Prerequisites
 
@@ -348,3 +350,38 @@ props.downstream.grantInvoke(this.handler);
 ```
 
 Now redeploy and retry. You may need to wait a few minutes for the roles to update.
+
+### 2.4 Using Construct Libraries
+
+We will import a construct library called cdk-dynamo-table-viewer into our project and install it on our hit counter table.
+
+(not intended for production use because it will expose contents of DynamoDB without authentication)
+
+#### 2.4.1
+
+Install:
+```bash
+npm install cdk-dynamo-table-viewer@0.2.0
+```
+
+Add to CDK Workshop stack:
+```ts
+import { TableViewer } from 'cdk-dynamo-table-viewer';
+
+// ...
+
+new TableViewer(this, 'ViewHitCounter', {
+  title: 'Hello Hits',
+  table: //??????
+});
+```
+
+Make the HitCouter DynamoDB table a public property:
+```ts
+/** the hit counter table */
+public readonly table: dynamodb.Table;
+// ...
+this.table = table;
+```
+
+Now we can view the database records in a web UI using the URL of CdkWorkshopStack.ViewHitCounterViewerEndpointCA1B1E4B.
