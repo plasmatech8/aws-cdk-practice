@@ -30,6 +30,9 @@ Contents:
     - [2.5 Testing Constructs](#25-testing-constructs)
       - [2.5.1 Assertion](#251-assertion)
       - [2.5.2 Validation](#252-validation)
+    - [2.6. CDK Pipelines](#26-cdk-pipelines)
+      - [2.6.1. Create pipeline stack](#261-create-pipeline-stack)
+      - [2.6.2. Writing the stack pipeline](#262-writing-the-stack-pipeline)
 
 ## 1. Prerequisites
 
@@ -535,3 +538,71 @@ test('read capacity can be configured', () => {
   }).toThrowError(/readCapacity must be greater than 5 and less than 20/);
 });
 ```
+
+### 2.6. CDK Pipelines
+
+For continuous deployment using Git repository.
+
+#### 2.6.1. Create pipeline stack
+
+We will create completely seperate stack called the pipeline-stack.
+```ts
+import * as cdk from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+
+export class WorkshopPipelineStack extends cdk.Stack {
+    constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+        super(scope, id, props);
+
+        // Pipeline code goes here
+    }
+}
+```
+
+And we will add this stack to `bin/cdk-workshop.ts`.
+```ts
+import * as cdk from 'aws-cdk-lib';
+import { WorkshopPipelineStack } from '../lib/pipeline-stack';
+
+const app = new cdk.App();
+// new CdkWorkshopStack(app, 'CdkWorkshopStack');
+new WorkshopPipelineStack(app, 'CdkWorkshopPipelineStack');
+```
+
+Note that we can only deploy one stack at a time, and we need to
+either write the stack name, or comment out the stack to ignore.
+
+#### 2.6.2. Writing the stack pipeline
+
+We will add a codecommit repository to our pipeline stack.
+```ts
+// Creates a CodeCommit repository called 'WorkshopRepo'
+new codecommit.Repository(this, 'WorkshopRepo', {
+    repositoryName: "WorkshopRepo"
+});
+```
+
+And deploy.
+
+Then we will go to AWS Console > IAM > Users > Security credentials > HTTPS
+Git Credentials.
+
+Download the git credentialsfor the AWS CodeCommit user.
+
+Go into the CodeCommit console and look for the repo created by CodeCommit.
+
+Copy the HTTPS endpoint.
+
+Note: Make sure you are in the correct region when you navigate to CodeCommit.
+
+Create git repo with CodeCommit and push initial commit using the git credentials:
+```bash
+cd 01_cdkworkshop/cdk-workshop/
+git init
+git add -A
+git commit -m "init"
+git remote add origin https://git-codecommit.ap-southeast-2.amazonaws.com/v1/repos/WorkshopRepo
+git push --set-upstream origin master
+```
+
+Now we can see our repository in AWS CodeCommit.
