@@ -29,6 +29,7 @@ Contents:
       - [2.4.1 Use CDK Dynamo table viewer](#241-use-cdk-dynamo-table-viewer)
     - [2.5 Testing Constructs](#25-testing-constructs)
       - [2.5.1 Assertion](#251-assertion)
+      - [2.5.2 Validation](#252-validation)
 
 ## 1. Prerequisites
 
@@ -502,3 +503,35 @@ test('DynamoDB Table Created With Encryption', () => {
 Note that the HitCounter stack will need to be fixed by configuring
 `encryption: dynamodb.TableEncryption.AWS_MANAGED`
 on the DynamoDB table.
+
+#### 2.5.2 Validation
+
+Input parameter validation is done within the constructor of a construct.
+
+First we will add a `readCapacity?: number;` onto the HitCounter props interface,
+and add `readCapacity: props.readCapacity ?? 5` to our DynamoDB table.
+
+We will add validation to HitCounter in the constructor:
+```ts
+if (props.readCapacity !== undefined && (props.readCapacity < 5 || props.readCapacity > 20)) {
+  throw new Error('readCapacity must be greater than 5 and less than 20');
+}
+```
+
+Now we can add a unit test to expect failure:
+```ts
+test('read capacity can be configured', () => {
+  const stack = new cdk.Stack();
+
+  expect(() => {
+    new HitCounter(stack, 'MyTestConstruct', {
+      downstream:  new lambda.Function(stack, 'TestFunction', {
+        runtime: lambda.Runtime.NODEJS_14_X,
+        handler: 'hello.handler',
+        code: lambda.Code.fromAsset('lambda')
+      }),
+      readCapacity: 3
+    });
+  }).toThrowError(/readCapacity must be greater than 5 and less than 20/);
+});
+```
