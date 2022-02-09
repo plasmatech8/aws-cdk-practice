@@ -27,6 +27,8 @@ Contents:
       - [2.3.4 Deploy, Test, Debug](#234-deploy-test-debug)
     - [2.4 Using Construct Libraries](#24-using-construct-libraries)
       - [2.4.1](#241)
+    - [2.5 Testing Constructs](#25-testing-constructs)
+      - [2.5.1 Assertion](#251-assertion)
 
 ## 1. Prerequisites
 
@@ -372,7 +374,7 @@ import { TableViewer } from 'cdk-dynamo-table-viewer';
 
 new TableViewer(this, 'ViewHitCounter', {
   title: 'Hello Hits',
-  table: //??????
+  table: // <table construct>
 });
 ```
 
@@ -385,3 +387,116 @@ this.table = table;
 ```
 
 Now we can view the database records in a web UI using the URL of CdkWorkshopStack.ViewHitCounterViewerEndpointCA1B1E4B.
+
+### 2.5 Testing Constructs
+
+We will be using the CDK `assertions` (`aws-cdk-lib/assertions`) library.
+
+We will mostly use the `hasResourceProperties` function.
+This checks whether a resource of particular type exists.
+
+e.g.
+```ts
+template.hasResourceProperties('AWS::CertificateManager::Certificate', {
+    DomainName: 'test.example.com',
+    ShouldNotExist: Match.absent(),
+    // Note: some properties omitted here
+});
+```
+
+`Match.absent()` can be used to check the a particular key is undefined.
+
+#### 2.5.1 Assertion
+
+We can create a stack object, create constructs on the stack,
+then create a template object. The template object can be
+used to analyse the details of the stack.
+
+We can check the resource count. e.g.
+```ts
+import { Template, Capture } from 'aws-cdk-lib/assertions';
+import * as cdk from 'aws-cdk-lib';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import { HitCounter }  from '../lib/hitcounter';
+
+test('DynamoDB Table Created', () => {
+  const stack = new cdk.Stack();
+
+  // WHEN
+  new HitCounter(stack, 'MyTestConstruct', {
+    downstream:  new lambda.Function(stack, 'TestFunction', {
+      runtime: lambda.Runtime.NODEJS_14_X,
+      handler: 'hello.handler',
+      code: lambda.Code.fromAsset('lambda')
+    })
+  });
+
+  // THEN
+  const template = Template.fromStack(stack);
+  template.resourceCountIs("AWS::DynamoDB::Table", 1);
+});
+```
+
+We can check the environment variables. e.g.
+```ts
+test('Lambda Has Environment Variables', () => {
+  const stack = new cdk.Stack();
+
+  // WHEN
+  new HitCounter(stack, 'MyTestConstruct', {
+      downstream:  new lambda.Function(stack, 'TestFunction', {
+          runtime: lambda.Runtime.NODEJS_14_X,
+          handler: 'hello.handler',
+          code: lambda.Code.fromAsset('lambda')
+      })
+  });
+
+  // THEN
+  const template = Template.fromStack(stack);
+  const envCapture = new Capture();
+  template.hasResourceProperties("AWS::Lambda::Function", {
+      Environment: envCapture,
+  });
+
+  expect(envCapture.asObject()).toEqual(
+      {
+          Variables: {
+              DOWNSTREAM_FUNCTION_NAME: {
+                  Ref: "TestFunctionXXXXX",
+              },
+              HITS_TABLE_NAME: {
+                  Ref: "MyTestConstructHitsXXXXX",
+              },
+          },
+      }
+  );
+});
+```
+
+We can also create a test to check that our database was created with encryption. e.g.
+```ts
+test('DynamoDB Table Created With Encryption', () => {
+    const stack = new cdk.Stack();
+
+    // WHEN
+    new HitCounter(stack, 'MyTestConstruct', {
+        downstream:  new lambda.Function(stack, 'TestFunction', {
+            runtime: lambda.Runtime.NODEJS_14_X,
+            handler: 'hello.handler',
+            code: lambda.Code.fromAsset('lambda')
+        })
+    });
+
+    // THEN
+    const template = Template.fromStack(stack);
+    template.hasResourceProperties('AWS::DynamoDB::Table', {
+        SSESpecification: {
+            SSEEnabled: true
+        }
+    });
+});
+```
+
+Note that the HitCounter stack will need to be fixed by configuring
+`encryption: dynamodb.TableEncryption.AWS_MANAGED`
+on the DynamoDB table.
