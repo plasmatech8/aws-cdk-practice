@@ -3,7 +3,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 import { HitCounter } from './hitcounter';
-import { TableViewer, TableViewerProps } from 'cdk-dynamo-table-viewer';
+import { TableViewer } from 'cdk-dynamo-table-viewer';
 
 
 import { Construct } from 'constructs';
