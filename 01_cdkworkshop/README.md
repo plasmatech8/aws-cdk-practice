@@ -26,7 +26,7 @@ Contents:
       - [2.3.3 Add hit counter to the stack](#233-add-hit-counter-to-the-stack)
       - [2.3.4 Deploy, Test, Debug](#234-deploy-test-debug)
     - [2.4 Using Construct Libraries](#24-using-construct-libraries)
-      - [2.4.1](#241)
+      - [2.4.1 Use CDK Dynamo table viewer](#241-use-cdk-dynamo-table-viewer)
     - [2.5 Testing Constructs](#25-testing-constructs)
       - [2.5.1 Assertion](#251-assertion)
 
@@ -359,7 +359,7 @@ We will import a construct library called cdk-dynamo-table-viewer into our proje
 
 (not intended for production use because it will expose contents of DynamoDB without authentication)
 
-#### 2.4.1
+#### 2.4.1 Use CDK Dynamo table viewer
 
 Install:
 ```bash
@@ -405,6 +405,8 @@ template.hasResourceProperties('AWS::CertificateManager::Certificate', {
 ```
 
 `Match.absent()` can be used to check the a particular key is undefined.
+
+Use command: `npm run test` to run unit tests
 
 #### 2.5.1 Assertion
 
