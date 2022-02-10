@@ -5,4 +5,4 @@ import { WorkshopPipelineStack } from '../lib/pipeline-stack';
 
 const app = new cdk.App();
 new CdkWorkshopStack(app, 'CdkWorkshopStack');
-new WorkshopPipelineStack(app, 'CdkWorkshopPipelineStack');
+// new WorkshopPipelineStack(app, 'CdkWorkshopPipelineStack');

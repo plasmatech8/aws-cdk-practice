@@ -31,8 +31,10 @@ Contents:
       - [2.5.1 Assertion](#251-assertion)
       - [2.5.2 Validation](#252-validation)
     - [2.6. CDK Pipelines](#26-cdk-pipelines)
-      - [2.6.1. Create pipeline stack](#261-create-pipeline-stack)
-      - [2.6.2. Writing the stack pipeline](#262-writing-the-stack-pipeline)
+      - [2.6.1. Initialize pipeline stack](#261-initialize-pipeline-stack)
+      - [2.6.2. Create CodeCommit repository](#262-create-codecommit-repository)
+      - [2.6.2. Create a Code Pipeline](#262-create-a-code-pipeline)
+      - [2.6.3. Create stage](#263-create-stage)
 
 ## 1. Prerequisites
 
@@ -543,7 +545,7 @@ test('read capacity can be configured', () => {
 
 For continuous deployment using Git repository.
 
-#### 2.6.1. Create pipeline stack
+#### 2.6.1. Initialize pipeline stack
 
 We will create completely seperate stack called the pipeline-stack.
 ```ts
@@ -572,7 +574,7 @@ new WorkshopPipelineStack(app, 'CdkWorkshopPipelineStack');
 Note that we can only deploy one stack at a time, and we need to
 either write the stack name, or comment out the stack to ignore.
 
-#### 2.6.2. Writing the stack pipeline
+#### 2.6.2. Create CodeCommit repository
 
 We will add a codecommit repository to our pipeline stack.
 ```ts
@@ -606,3 +608,75 @@ git push --set-upstream origin master
 ```
 
 Now we can see our repository in AWS CodeCommit.
+
+#### 2.6.2. Create a Code Pipeline
+
+We will use the `npm install aws-cdk-lib/pipelines` package.
+
+We will get our CodeCommit repo and pass it into the pipeline as a CodePipeline input.
+```ts
+// This creates a new CodeCommit repository called 'WorkshopRepo'
+const repo = new codecommit.Repository(this, 'WorkshopRepo', {
+    repositoryName: "WorkshopRepo"
+});
+
+// The basic pipeline declaration. This sets the initial structure
+// of our pipeline
+const pipeline = new CodePipeline(this, 'Pipeline', {
+    pipelineName: 'WorkshopPipeline',
+    synth: new CodeBuildStep('SynthStep', {
+            input: CodePipelineSource.codeCommit(repo, 'master'),
+            installCommands: [
+                'npm install -g aws-cdk'
+            ],
+            commands: [
+                'npm ci',
+                'npm run build',
+                'npx cdk synth'
+            ]
+        }
+    )
+});
+```
+
+Now we can deploy our changes and view the pipeline in the CodePipeline console.
+```bash
+git commit -am "Added code pipeline"
+git push
+npx cdk deploy
+```
+
+#### 2.6.3. Create stage
+
+Now we have a pipeline that will automatically update itself on each ocmmit.
+
+But now we need to add a stage to deploy the application.
+
+We will create a `pipekine-stage.ts` class which instantiates our CdkWorkshop stack.
+```ts
+import { CdkWorkshopStack } from './cdk-workshop-stack';
+import { Stage, StageProps } from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+
+export class WorkshopPipelineStage extends Stage {
+    constructor(scope: Construct, id: string, props?: StageProps) {
+        super(scope, id, props);
+
+        new CdkWorkshopStack(this, 'WebService');
+    }
+}
+```
+
+??? "the application stack as it stands now is not configured to be deployed by a pipeline"
+
+And add it to `pipeline-stack.ts`
+```ts
+import {WorkshopPipelineStage} from './pipeline-stage';
+
+const deploy = new WorkshopPipelineStage(this, 'Deploy');
+const deployStage = pipeline.addStage(deploy);
+```
+
+...
+
+The Code Pipeline stuff confuses my slightly and I do not know if we intend to use it.
