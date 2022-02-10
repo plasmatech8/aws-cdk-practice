@@ -680,3 +680,6 @@ const deployStage = pipeline.addStage(deploy);
 ...
 
 The Code Pipeline stuff confuses my slightly and I do not know if we intend to use it.
+
+Essentially, the pipeline is a pre-step, which makes sure that the pipeline resources are created,
+and then creates a stage to create our custom CDK Workshop Stack.
