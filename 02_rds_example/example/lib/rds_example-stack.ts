@@ -3,7 +3,7 @@ import { Construct } from 'constructs';
 
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as rds from 'aws-cdk-lib/aws-rds';
-import * as cdk from 'aws-cdk-lib/core';
+import * as cdk from 'aws-cdk-lib';
 
 export class RdsExampleStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -54,6 +54,44 @@ export class RdsExampleStack extends Stack {
         generation: ec2.AmazonLinuxGeneration.AMAZON_LINUX_2,
       }),
       keyName: 'ec2-key-pair',
+    });
+
+    // 👇 create RDS instance
+    const dbInstance = new rds.DatabaseInstance(this, 'db-instance', {
+      vpc,
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+      },
+      engine: rds.DatabaseInstanceEngine.postgres({
+        version: rds.PostgresEngineVersion.VER_13_1,
+      }),
+      instanceType: ec2.InstanceType.of(
+        ec2.InstanceClass.BURSTABLE3,
+        ec2.InstanceSize.MICRO,
+      ),
+      credentials: rds.Credentials.fromGeneratedSecret('postgres'),
+      multiAz: false,
+      allocatedStorage: 100,
+      maxAllocatedStorage: 105,
+      allowMajorVersionUpgrade: false,
+      autoMinorVersionUpgrade: true,
+      backupRetention: cdk.Duration.days(0),
+      deleteAutomatedBackups: true,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      deletionProtection: false,
+      databaseName: 'todosdb',
+      publiclyAccessible: false,
+    });
+
+    dbInstance.connections.allowFrom(ec2Instance, ec2.Port.tcp(5432));
+
+    new cdk.CfnOutput(this, 'dbEndpoint', {
+      value: dbInstance.instanceEndpoint.hostname,
+    });
+
+    new cdk.CfnOutput(this, 'secretName', {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+      value: dbInstance.secret?.secretName!,
     });
   }
 }

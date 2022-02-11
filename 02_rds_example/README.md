@@ -24,3 +24,24 @@ In `rds_example-stack.ts`:
 * **Create EC2 Instance** called 'ec2-instance' in the VPC public subnet
 
 ## 3. Create RDS Inance
+
+In `rds_example-stack.ts`:
+* **Create RDS Instance** called 'db-instance' in the VPC private subnet
+* **Create CloudFormation Output** of the database endpoint and secret name
+
+We wish, we can put outputs into a file using command: `npx cdk deploy  --outputs-file ./cdk-outputs.json`
+
+If we look at the security group for the RDS instance,
+we can see that port 5432 is allowed from the security group
+of our EC2 instance. This is because we added:
+```ts
+dbInstance.connections.allowFrom(ec2Instance, ec2.Port.tcp(5432));
+```
+
+Now we need to get the secret to connect to the database using
+the secret-name from CloudFormation outputs:
+```bash
+aws secretsmanager get-secret-value --secret-id <SECRET-NAME> --output yaml
+```
+
+Take note of the outputs.
