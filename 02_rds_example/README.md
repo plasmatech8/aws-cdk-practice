@@ -6,6 +6,8 @@ Following Tutorial: https://bobbyhadz.com/blog/aws-cdk-rds-example
   - [1. Setup](#1-setup)
   - [2. Create VPC and EC2 instance](#2-create-vpc-and-ec2-instance)
   - [3. Create RDS Inance](#3-create-rds-inance)
+  - [3. Connecting to RDS](#3-connecting-to-rds)
+  - [4. Cleanup](#4-cleanup)
 
 ## 1. Setup
 
@@ -38,10 +40,58 @@ of our EC2 instance. This is because we added:
 dbInstance.connections.allowFrom(ec2Instance, ec2.Port.tcp(5432));
 ```
 
-Now we need to get the secret to connect to the database using
-the secret-name from CloudFormation outputs:
+Now we need to get the secret to connect to the database. Either use the AWS Console (Secrets Manager > (Select Database))
+or use the AWS command using the secret-name from CloudFormation outputs:
 ```bash
 aws secretsmanager get-secret-value --secret-id <SECRET-NAME> --output yaml
 ```
 
 Take note of the outputs.
+
+## 3. Connecting to RDS
+
+SSH into EC2:
+```bash
+chmod 400 ec2-key-pair.pem
+ssh -i "ec2-key-pair.pem" \
+  ec2-user@<YOUR_EC2_PUBLIC_IPV4_ADDRESS>
+```
+
+Install postgres client:
+```bash
+sudo amazon-linux-extras install epel -y
+sudo yum install postgresql postgresql-server -y
+```
+
+Connect to the RDS database (we can use dbEndpoint from outputs):
+```bash
+psql -p 5432 -h rdp520nopb360t.cm9pnmgmvami.ap-southeast-2.rds.amazonaws.com -U postgres
+```
+
+Enter the database password noted above.
+
+Now we can manage the database:
+```
+# 👇 list tables
+\l
+
+# 👇 print current database
+SELECT current_database();
+
+# 👇 connect to todosdb
+\c todosdb
+
+# 👇 Create table and insert rows
+CREATE TABLE IF NOT EXISTS todos (todoid SERIAL PRIMARY KEY, text TEXT NOT NULL);
+INSERT INTO todos (text) VALUES ('Walk the dog');
+INSERT INTO todos (text) VALUES ('Buy groceries');
+
+# 👇 select rows
+SELECT * FROM todos;
+```
+
+## 4. Cleanup
+
+```bash
+cdk destroy
+```
