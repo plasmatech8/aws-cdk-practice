@@ -5,7 +5,7 @@
   let username;
   let password;
 
-  let user = {};
+  let user;
   let response = {};
 
   onMount(() => {
@@ -24,7 +24,7 @@
 
   async function signUp() {
     console.log("Signing Up");
-    const res = await Auth.signUp({
+    await Auth.signUp({
       username: username,
       password: password,
     });
@@ -45,7 +45,11 @@
   async function callGet() {
     console.log("Calling API GET");
     response = {};
-    response = await API.get("Endpoint", "/hello", {});
+    try {
+      response = await API.get("Endpoint", "/hello", {});
+    } catch (e) {
+      response = e;
+    }
   }
 
   async function callPost() {
@@ -59,41 +63,38 @@
   <img src={logo} alt="Svelte Logo" />
   <h1>Hello world!</h1>
   <div>
-    <label for="username">Username</label>
-    <input type="text" id="username" name="username" bind:value={username} />
-    <br />
-    <label for="password">Password</label>
-    <input
-      type="password"
-      id="password"
-      name="password"
-      bind:value={password}
-    />
-    <br />
+    {#if !user}
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" bind:value={username} />
+      <br />
+      <label for="password">Password</label>
+      <input
+        type="password"
+        id="password"
+        name="password"
+        bind:value={password}
+      />
+      <br />
+      <button on:click={signUp}>Sign Up</button>
+      <button on:click={signIn}>Sign In</button>
+    {:else}
+      <p>You are logged in as {user.username}</p>
+      <br />
+      <p><button on:click={signOut}>Sign Out</button></p>
+    {/if}
   </div>
   <div>
-    <p><button on:click={signUp}>Sign Up</button></p>
-    <p><button on:click={signIn}>Sign In</button></p>
-    <p><button on:click={signOut}>Sign Out</button></p>
     <p><button on:click={callGet}>Call GET</button></p>
     <p><button on:click={callPost}>Call POST</button></p>
   </div>
   <div class="grid">
     <div class="item">
       Call Response:
-      <pre>
-        <code>
-          {JSON.stringify(response, null, 4)}
-        </code>
-      </pre>
+      <pre><code>{JSON.stringify(response, null, 4)}</code></pre>
     </div>
     <div class="item">
       User Object:
-      <pre>
-        <code>
-{JSON.stringify(user, null, 4)}
-        </code>
-      </pre>
+      <pre><code>{JSON.stringify(user, null, 4)}</code></pre>
     </div>
   </div>
 </main>
