@@ -42,10 +42,16 @@
     updateUser();
   }
 
-  async function callApi() {
-    console.log("Calling API");
-    const res = await API.get("Endpoint", "/hello", {});
-    console.log(res);
+  async function callGet() {
+    console.log("Calling API GET");
+    response = {};
+    response = await API.get("Endpoint", "/hello", {});
+  }
+
+  async function callPost() {
+    console.log("Calling API POST");
+    response = {};
+    response = await API.post("Endpoint", "/hello", { body: {} });
   }
 </script>
 
@@ -69,7 +75,8 @@
     <p><button on:click={signUp}>Sign Up</button></p>
     <p><button on:click={signIn}>Sign In</button></p>
     <p><button on:click={signOut}>Sign Out</button></p>
-    <p><button on:click={callApi}>Call API</button></p>
+    <p><button on:click={callGet}>Call GET</button></p>
+    <p><button on:click={callPost}>Call POST</button></p>
   </div>
   <div class="grid">
     <div class="item">
@@ -84,7 +91,7 @@
       User Object:
       <pre>
         <code>
-          {JSON.stringify(user, null, 4)}
+{JSON.stringify(user, null, 4)}
         </code>
       </pre>
     </div>
@@ -117,6 +124,9 @@
     background-color: black;
     color: white;
     white-space: pre-wrap;
+    overflow: auto;
+  }
+  code {
     text-overflow: ellipsis;
   }
 

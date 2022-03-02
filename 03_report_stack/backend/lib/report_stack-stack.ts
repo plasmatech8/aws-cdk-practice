@@ -6,6 +6,34 @@ import * as cognito from 'aws-cdk-lib/aws-cognito';
 
 import { Construct } from 'constructs';
 
+const lambdaIntegrationConfig = {
+  proxy: false,
+  integrationResponses: [{
+    statusCode: '200',
+    responseParameters: {
+      'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+      'method.response.header.Access-Control-Allow-Origin': "'*'",
+      'method.response.header.Access-Control-Allow-Credentials': "'false'",
+      'method.response.header.Access-Control-Allow-Methods': "'OPTIONS,GET,PUT,POST,DELETE'",
+    },
+  }],
+  passthroughBehavior: apigw.PassthroughBehavior.NEVER,
+  requestTemplates: {
+    "application/json": "{\"statusCode\": 200}"
+  },
+}
+const methodOptions = {
+  methodResponses: [{
+    statusCode: '200',
+    responseParameters: {
+      'method.response.header.Access-Control-Allow-Headers': true,
+      'method.response.header.Access-Control-Allow-Methods': true,
+      'method.response.header.Access-Control-Allow-Credentials': true,
+      'method.response.header.Access-Control-Allow-Origin': true,
+    },
+  }]
+};
+
 export class ReportStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
@@ -26,9 +54,9 @@ export class ReportStack extends Stack {
       deployOptions: {
         stageName: 'prod',
       },
-      // defaultCorsPreflightOptions: {
-      //   allowOrigins: apigw.Cors.ALL_ORIGINS
-      // },
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigw.Cors.ALL_ORIGINS
+      },
     });
     new cdk.CfnOutput(this, 'apiUrl', {value: apiGateway.url});
 
@@ -41,37 +69,8 @@ export class ReportStack extends Stack {
     });
     // integrate with API gateway
     const helloResourse = apiGateway.root.addResource('hello', {});
-    helloResourse.addMethod(
-      'GET',
-      new apigw.LambdaIntegration(hello,
-      {
-        proxy: false,
-        integrationResponses: [{
-          statusCode: '200',
-          responseParameters: {
-            'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
-            'method.response.header.Access-Control-Allow-Origin': "'*'",
-            'method.response.header.Access-Control-Allow-Credentials': "'false'",
-            'method.response.header.Access-Control-Allow-Methods': "'OPTIONS,GET,PUT,POST,DELETE'",
-          },
-        }],
-        passthroughBehavior: apigw.PassthroughBehavior.NEVER,
-        requestTemplates: {
-          "application/json": "{\"statusCode\": 200}"
-        },
-      }),
-      {
-        methodResponses: [{
-          statusCode: '200',
-          responseParameters: {
-            'method.response.header.Access-Control-Allow-Headers': true,
-            'method.response.header.Access-Control-Allow-Methods': true,
-            'method.response.header.Access-Control-Allow-Credentials': true,
-            'method.response.header.Access-Control-Allow-Origin': true,
-          },
-        }]
-      }
-    );
+    helloResourse.addMethod('GET', new apigw.LambdaIntegration(hello, lambdaIntegrationConfig), methodOptions);
+    helloResourse.addMethod('POST', new apigw.LambdaIntegration(hello, lambdaIntegrationConfig), methodOptions);
 
     // Cognito
     const userPool = new cognito.UserPool(this, 'Userpool', {
