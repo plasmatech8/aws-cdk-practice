@@ -1,0 +1,18 @@
+{
+  "name": "lambda-functions",
+  "version": "1.0.0",
+  "description": "Lambda Functions",
+  "main": "app.js",
+  "author": "VA SCIENCES",
+  "license": "NA",
+  "dependencies": {
+    "node-fetch": "^2.6.1",
+    "adal-node": "^0.2.1",
+    "guid": "0.0.12"
+  },
+  "scripts": {},
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^6.1.4"
+  }
+}

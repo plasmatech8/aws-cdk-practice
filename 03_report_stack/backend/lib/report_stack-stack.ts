@@ -3,6 +3,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 
 import { Construct } from 'constructs';
 
@@ -61,16 +62,25 @@ export class ReportStack extends Stack {
     new cdk.CfnOutput(this, 'apiUrl', {value: apiGateway.url});
 
 
-    // Lambda Function
+    // Hello Lambda Function
     const hello = new lambda.Function(this, 'HelloHandler', {
       runtime: lambda.Runtime.NODEJS_14_X,
-      code: lambda.Code.fromAsset('lambda'),
+      code: new lambda.AssetCode('lambda'),
       handler: 'hello.handler'
     });
-    // integrate with API gateway
-    const helloResourse = apiGateway.root.addResource('hello', {});
-    helloResourse.addMethod('GET', new apigw.LambdaIntegration(hello, lambdaIntegrationConfig), methodOptions);
-    helloResourse.addMethod('POST', new apigw.LambdaIntegration(hello, lambdaIntegrationConfig), methodOptions);
+    const helloResource = apiGateway.root.addResource('hello', {});
+    helloResource.addMethod('GET', new apigw.LambdaIntegration(hello, lambdaIntegrationConfig), methodOptions);
+    helloResource.addMethod('POST', new apigw.LambdaIntegration(hello, lambdaIntegrationConfig), methodOptions);
+
+    // GetEmbedInfo Lambda Function
+    const getEmbedInfo = new lambda.Function(this, 'GetEmbedInfoHandler', {
+      runtime: lambda.Runtime.NODEJS_14_X,
+      code: new lambda.AssetCode('lambda'),
+      handler: 'getEmbedInfo.handler',
+      timeout: cdk.Duration.seconds(8)
+    });
+    const getEmbedInfoResource = apiGateway.root.addResource('getEmbedInfo', {});
+    getEmbedInfoResource.addMethod('POST', new apigw.LambdaIntegration(getEmbedInfo, lambdaIntegrationConfig), methodOptions);
 
     // Cognito
     const userPool = new cognito.UserPool(this, 'Userpool', {
@@ -99,8 +109,13 @@ export class ReportStack extends Stack {
     // TODO: App clients > Create app client (do not generate secret/token)
     // TODO: App clients > ALLOW_USER_PASSWORD_AUTH
 
+    // Identity Pool
     const identityPool = new cognito.CfnIdentityPool(this, 'IdentityPool', {
       allowUnauthenticatedIdentities: false,
     });
+
+    // Secrets manager
+    const secret = secretsmanager.Secret.fromSecretNameV2(this, 'MsAccountSecret', 'VAS-MS-ACCOUNT-MARK');
+    secret.grantRead(getEmbedInfo)
   }
 }

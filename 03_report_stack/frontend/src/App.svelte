@@ -42,20 +42,20 @@
     updateUser();
   }
 
-  async function callGet() {
+  async function get(resource, data) {
     console.log("Calling API GET");
     response = {};
     try {
-      response = await API.get("Endpoint", "/hello", {});
+      response = await API.get("Endpoint", resource, data);
     } catch (e) {
       response = e;
     }
   }
 
-  async function callPost() {
+  async function post(resource, data) {
     console.log("Calling API POST");
     response = {};
-    response = await API.post("Endpoint", "/hello", { body: {} });
+    response = await API.post("Endpoint", resource, data);
   }
 </script>
 
@@ -84,8 +84,14 @@
     {/if}
   </div>
   <div>
-    <p><button on:click={callGet}>Call GET</button></p>
-    <p><button on:click={callPost}>Call POST</button></p>
+    Hello:
+    <button on:click={() => get("/hello")}>GET</button>
+    <button on:click={() => post("/hello", { body: {} })}>POST</button>
+  </div>
+  <div>
+    GetEmbedInfo:
+    <button on:click={() => get("/getEmbedInfo")}>GET</button>
+    <button on:click={() => post("/getEmbedInfo", { body: {} })}>POST</button>
   </div>
   <div class="grid">
     <div class="item">
