@@ -7,7 +7,7 @@ Amplify.configure({
     identityPoolId: "ap-southeast-2:9516c777-b834-4b85-ad80-5aa1ac6422ca",
     region: "ap-southeast-2",
     userPoolId: "ap-southeast-2_eA1Ul6xTa",
-    userPoolWebClientId: "6gg9nfd5vjfmhl9ejck88mo5oh",
+    userPoolWebClientId: "274fht7hu6pu9pk7aitvvv3n5n",
     mandatorySignIn: true,
     authenticationFlowType: "USER_PASSWORD_AUTH"
   },

@@ -49,6 +49,9 @@
   async function get(resource, data) {
     console.log("Calling API GET");
     response = {};
+    data.headers = {
+      Authorization: user?.signInUserSession?.idToken?.jwtToken,
+    };
     try {
       response = await API.get("Endpoint", resource, data);
     } catch (e) {
@@ -58,6 +61,9 @@
 
   async function post(resource, data) {
     console.log("Calling API POST");
+    data.headers = {
+      Authorization: user?.signInUserSession?.idToken?.jwtToken,
+    };
     response = {};
     response = await API.post("Endpoint", resource, data);
   }
@@ -119,12 +125,12 @@
   </div>
   <div>
     Hello:
-    <button on:click={() => get("/hello")}>GET</button>
+    <button on:click={() => get("/hello", {})}>GET</button>
     <button on:click={() => post("/hello", { body: {} })}>POST</button>
   </div>
   <div>
     GetEmbedInfo:
-    <button on:click={() => get("/getEmbedInfo")}>GET</button>
+    <button on:click={() => get("/getEmbedInfo", {})}>GET</button>
     <button on:click={() => post("/getEmbedInfo", { body: {} })}>POST</button>
   </div>
   <div class="grid">
