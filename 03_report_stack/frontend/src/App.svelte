@@ -1,12 +1,16 @@
 <script>
-  import logo from "./assets/svelte.png";
-  import { Auth, API } from "aws-amplify";
   import { onMount } from "svelte";
+  import * as pbi from "powerbi-client";
+  import { Auth, API } from "aws-amplify";
+
+  import logo from "./assets/svelte.png";
+
   let username;
   let password;
 
   let user;
   let response = {};
+  let reportFrame;
 
   onMount(() => {
     console.log("Mounted");
@@ -57,10 +61,40 @@
     response = {};
     response = await API.post("Endpoint", resource, data);
   }
+
+  async function showReport() {
+    const permissions = pbi.models.Permissions.Read;
+    const { accessToken, expiry, status } = response.body;
+    const embedUrl = response.body.embedUrl[0].embedUrl;
+    const config = {
+      type: "report",
+      tokenType: pbi.models.TokenType.Embed, //  pbi.models.TokenType.Aad,
+      accessToken: accessToken,
+      embedUrl: embedUrl,
+      id: "76f6bf00-74ac-4311-81fb-4a5e54a3e7a8",
+      permissions: permissions,
+      settings: {
+        filterPaneEnabled: false,
+        navContentPaneEnabled: false,
+      },
+    };
+    const powerbi = new pbi.service.Service(
+      pbi.factories.hpmFactory,
+      pbi.factories.wpmpFactory,
+      pbi.factories.routerFactory
+    );
+    console.log(reportFrame);
+    const report = powerbi.embed(reportFrame, config);
+    report.off("loaded");
+    report.off("rendered");
+    report.on("error", function () {
+      report.off("error");
+    });
+  }
 </script>
 
 <main>
-  <img src={logo} alt="Svelte Logo" />
+  <img src={logo} alt="Svelte Logo" class="logo" />
   <h1>Hello world!</h1>
   <div>
     {#if !user}
@@ -102,6 +136,12 @@
       User Object:
       <pre><code>{JSON.stringify(user, null, 4)}</code></pre>
     </div>
+  </div>
+  <div>
+    <p>
+      <button on:click={showReport}>Show Report</button>
+    </p>
+    <div bind:this={reportFrame} title="Report" class="reportFrame" />
   </div>
 </main>
 
@@ -146,6 +186,18 @@
     padding: 0.5em;
     background: #efefef;
     border: 3px solid #333;
-    min-height: 800px;
+    min-height: 400px;
+    max-height: 400px;
+    overflow: scroll;
+  }
+
+  .reportFrame {
+    width: 1000px;
+    height: 600px;
+  }
+
+  .logo {
+    height: 200px;
+    width: 200px;
   }
 </style>
